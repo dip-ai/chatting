@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -48,8 +47,13 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _sendMessage(String message) {
+    String timeStamp = DateTime.now().toIso8601String();
     setState(() {
-      _messages.add({"sender": "me", "message": message});
+      _messages.add({
+        "sender": "me",
+        "message": message,
+        "timestamp": timeStamp,
+      });
     });
     _saveMessages();
     _replyToMessage(message);
@@ -57,7 +61,16 @@ class _ChatPageState extends State<ChatPage> {
 
   void _replyToMessage(String message) {
     String reply;
-    if (message.toLowerCase() == 'hi' || message.toLowerCase() == 'hello') {
+    String timeStamp = DateTime.now().toIso8601String();
+
+    // Simple regex to check if message contains a URL
+    RegExp urlRegex =
+        RegExp(r"((https?:\/\/)|(www\.))[^\s]+", caseSensitive: false);
+
+    if (urlRegex.hasMatch(message)) {
+      reply = "Cool. It looks perfect";
+    } else if (message.toLowerCase() == 'hi' ||
+        message.toLowerCase() == 'hello') {
       reply = 'Hello';
     } else if (message.toLowerCase() == 'how are you') {
       reply = 'fine. you?';
@@ -66,10 +79,16 @@ class _ChatPageState extends State<ChatPage> {
     }
 
     Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _messages.add({"sender": "them", "message": reply});
-      });
-      _saveMessages();
+      if (mounted) {
+        setState(() {
+          _messages.add({
+            "sender": "them",
+            "message": reply,
+            "timestamp": timeStamp,
+          });
+        });
+        _saveMessages();
+      }
     });
   }
 
@@ -84,15 +103,12 @@ class _ChatPageState extends State<ChatPage> {
             ),
             const SizedBox(width: 8),
             Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(widget.contact.name),
-                Padding(
-                  padding: const EdgeInsets.only(right: 80.0),
-                  child: const Text(
-                    "online",
-                    textAlign: TextAlign.left,
-                    style: TextStyle(fontSize: 12, color: Colors.cyan),
-                  ),
+                const Text(
+                  "online",
+                  style: TextStyle(fontSize: 12, color: Colors.cyan),
                 ),
               ],
             ),
@@ -114,21 +130,44 @@ class _ChatPageState extends State<ChatPage> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 bool isMe = _messages[index]["sender"] == "me";
+                DateTime? messageTime;
+                try {
+                  messageTime = DateTime.parse(_messages[index]["timestamp"]!);
+                } catch (e) {
+                  messageTime = DateTime.now();
+                }
                 return Align(
                   alignment:
                       isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    margin:
-                        const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: isMe ? const Color(0xFF5A1BF8) : Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      _messages[index]["message"]!,
-                      style:
-                          TextStyle(color: isMe ? Colors.white : Colors.black),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Column(
+                      // crossAxisAlignment: isMe
+                      //     ? CrossAxisAlignment.end
+                      //     : CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 5, horizontal: 10),
+                          decoration: BoxDecoration(
+                            color:
+                                isMe ? const Color(0xFF5A1BF8) : Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            _messages[index]["message"]!,
+                            style: TextStyle(
+                                color: isMe ? Colors.white : Colors.black),
+                          ),
+                        ),
+                        Text(
+                          "${messageTime.hour.toString().padLeft(2, '0')}:${messageTime.minute.toString().padLeft(2, '0')}",
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.black54),
+                        ),
+                      ],
                     ),
                   ),
                 );

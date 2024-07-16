@@ -17,7 +17,7 @@ class CircleContainer extends StatelessWidget {
           Container(
             height: 120,
             width: 120,
-            clipBehavior: Clip.hardEdge,
+            // clipBehavior: Clip.hardEdge,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.deepPurple,
@@ -33,4 +33,5 @@ class CircleContainer extends StatelessWidget {
         ],
       ),
     );
-  
+  }
+}

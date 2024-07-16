@@ -2,6 +2,7 @@ import 'package:chat_app/first%20page/config/circle_container.dart';
 import 'package:chat_app/first%20page/config/rec_container.dart';
 import 'package:chat_app/second%20page/contact_page.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -11,6 +12,18 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
+  Future<void> _navigateToNextPage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seen', true);
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ContactPage()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,13 +77,7 @@ class _WelcomePageState extends State<WelcomePage> {
               padding: const EdgeInsets.all(12),
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ContactPage()),
-                  );
-                },
+                onPressed: _navigateToNextPage,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF5A1BF8), // Button color
                   padding: const EdgeInsets.symmetric(
