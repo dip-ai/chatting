@@ -1,6 +1,6 @@
 import 'package:chat_app/first%20page/config/circle_container.dart';
 import 'package:chat_app/first%20page/config/rec_container.dart';
-import 'package:chat_app/second%20page/contact_page.dart';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,10 +17,7 @@ class _WelcomePageState extends State<WelcomePage> {
     await prefs.setBool('seen', true);
 
     if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ContactPage()),
-      );
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
