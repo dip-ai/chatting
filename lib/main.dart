@@ -1,73 +1,65 @@
-import 'package:chat_app/auth/login_page.dart';
-import 'package:chat_app/first%20page/welcome_page.dart';
-import 'package:chat_app/second%20page/contact_page.dart';
+import 'package:chat_app/auth/Screen/login_screen.dart';
+import 'package:chat_app/firebase_options.dart';
+import 'package:chat_app/models/firebase_helper.dart';
+import 'package:chat_app/models/user_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
+import 'second page/contact_page.dart';
+
+var uuid = const Uuid();
+const apiKey = "https://book-your-seat.onrender.com";
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  bool seen = prefs.getBool('seen') ?? false;
-  runApp(MyApp(seen: seen));
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  User? currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser != null) {
+    UserModel? userModel =
+        await FirebaseHelper.getUserModelById(currentUser.uid);
+    userModel != null
+        ? runApp(MyAppLoggedIn(userModel: userModel, firebaseUser: currentUser))
+        : runApp(const MyApp());
+  } else {
+    runApp(const MyApp());
+  }
 }
 
 class MyApp extends StatelessWidget {
-  final bool seen;
-  const MyApp({super.key, required this.seen});
-
-  Future<bool> _isWelcomeScreenShown() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('seen') ?? false;
-  }
-
-  Future<bool> _isLoggedIn() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('isLoggedIn') ?? false;
-  }
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // scaffoldBackgroundColor: Color(0xFF797979),
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff0E57A5)),
+        useMaterial3: false,
       ),
-      // home: seen ? const ContactPage() : const WelcomePage(),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => FutureBuilder<bool>(
-              future: _isWelcomeScreenShown(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else {
-                  if (snapshot.data == true) {
-                    return FutureBuilder<bool>(
-                      future: _isLoggedIn(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        } else {
-                          if (snapshot.data == true) {
-                            return const ContactPage();
-                          } else {
-                            return const LoginPage();
-                          }
-                        }
-                      },
-                    );
-                  } else {
-                    return const WelcomePage();
-                  }
-                }
-              },
-            ),
-        '/login': (context) => const LoginPage(),
-        '/contact': (context) => const ContactPage(),
-      },
+      debugShowCheckedModeBanner: false,
+      home: const LoginScreen(),
     );
   }
 }
+
+class MyAppLoggedIn extends StatelessWidget {
+  final UserModel userModel;
+  final User firebaseUser;
+  const MyAppLoggedIn(
+      {super.key, required this.userModel, required this.firebaseUser});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ContactPage(userModel: userModel, firebaseUser: firebaseUser),
+    );
+  }
+}
+
+
+
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRpaXAxMjM0QGdtYWlsLmNvbSIsImlhdCI6MTcyNDM5NzIyN30.sk0UTbLWqSIRnRMectz3zsoMuMiDyoSiFyvJPM4MzPo
